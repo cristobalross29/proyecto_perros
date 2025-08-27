@@ -137,3 +137,32 @@ dist
 # Vite logs files
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
+
+# ── Expo / React Native (añadidos)
+.expo/
+.expo-shared/
+web-build/
+
+# ── SO (archivos basura locales)
+.DS_Store
+Thumbs.db
+
+# ── Android (artefactos de build y credenciales)
+android/.gradle/
+android/app/build/
+android/build/
+*.keystore
+*.jks
+
+# ── iOS (artefactos de build y pods)
+ios/Pods/
+ios/build/
+ios/DerivedData/
+*.xcuserstate
+*.xcuserdata/
+
+# ── Binarios de builds móviles (no subirlos)
+*.apk
+*.aab
+*.ipa
+*.app
