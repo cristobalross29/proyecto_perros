@@ -77,6 +77,28 @@ export default function DogHistory({ dogId }: { dogId: string }) {
     })
   }
 
+  const handleDeleteFeeding = async (feedingId: string) => {
+    if (!confirm('Are you sure you want to delete this feeding record?')) {
+      return
+    }
+
+    try {
+      const { error } = await supabase
+        .from('feedings')
+        .delete()
+        .eq('id', feedingId)
+        .eq('user_id', user?.id)
+
+      if (error) throw error
+
+      // Refresh the feedings list
+      fetchDogAndFeedings()
+    } catch (error) {
+      console.error('Error deleting feeding:', error)
+      alert('Failed to delete feeding record. Please try again.')
+    }
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -174,9 +196,18 @@ export default function DogHistory({ dogId }: { dogId: string }) {
                                 <span className="text-gray-700">
                                   {formatTime(feeding.timestamp)}
                                 </span>
-                                <span className="text-gray-500 text-xs">
-                                  #{feeding.id.slice(-4)}
-                                </span>
+                                <div className="flex items-center space-x-2">
+                                  <span className="text-gray-500 text-xs">
+                                    #{feeding.id.slice(-4)}
+                                  </span>
+                                  <button
+                                    onClick={() => handleDeleteFeeding(feeding.id)}
+                                    className="text-red-600 hover:text-red-800 text-xs font-medium"
+                                    title="Delete this feeding record"
+                                  >
+                                    ✕
+                                  </button>
+                                </div>
                               </div>
                             </div>
                           ))}
