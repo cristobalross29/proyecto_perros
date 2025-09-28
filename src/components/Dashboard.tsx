@@ -106,6 +106,29 @@ export default function Dashboard() {
     }
   }
 
+  const handleDeleteDog = async (dogId: string, dogName: string) => {
+    if (!confirm(`Are you sure you want to delete ${dogName}? This will also delete all feeding records for this dog.`)) {
+      return
+    }
+
+    try {
+      // Delete the dog (feedings will be deleted automatically due to CASCADE)
+      const { error } = await supabase
+        .from('dogs')
+        .delete()
+        .eq('id', dogId)
+        .eq('user_id', user?.id)
+
+      if (error) throw error
+
+      // Refresh the dogs list
+      fetchDogs()
+    } catch (error) {
+      console.error('Error deleting dog:', error)
+      alert('Failed to delete dog. Please try again.')
+    }
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -160,7 +183,16 @@ export default function Dashboard() {
           ) : (
             <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
               {dogs.map((dog) => (
-                <div key={dog.id} className="bg-white overflow-hidden shadow rounded-lg">
+                <div key={dog.id} className="bg-white overflow-hidden shadow rounded-lg relative">
+                  {/* Delete button */}
+                  <button
+                    onClick={() => handleDeleteDog(dog.id, dog.name)}
+                    className="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white rounded-full p-1 text-xs font-medium"
+                    title={`Delete ${dog.name}`}
+                  >
+                    ✕
+                  </button>
+                  
                   <div className="px-4 py-5 sm:p-6">
                     <div className="flex items-center">
                       <div className="flex-shrink-0">
