@@ -181,52 +181,52 @@ export default function Dashboard() {
               </Link>
             </div>
           ) : (
-            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="grid gap-6 grid-cols-1 md:grid-cols-2">
               {dogs.map((dog) => (
                 <div key={dog.id} className="bg-white overflow-hidden shadow rounded-lg relative">
                   {/* Delete button */}
                   <button
                     onClick={() => handleDeleteDog(dog.id, dog.name)}
-                    className="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white rounded-full p-1 text-xs font-medium"
+                    className="absolute top-3 right-3 bg-red-500 hover:bg-red-600 text-white rounded-full p-2 text-sm font-medium z-10"
                     title={`Delete ${dog.name}`}
                   >
                     ✕
                   </button>
                   
-                  <div className="px-4 py-5 sm:p-6">
-                    <div className="flex items-center">
+                  <div className="px-6 py-8">
+                    <div className="flex items-center mb-6">
                       <div className="flex-shrink-0">
                         {dog.photo_url ? (
                           <img
-                            className="h-12 w-12 rounded-full"
+                            className="h-20 w-20 rounded-full object-cover"
                             src={dog.photo_url}
                             alt={dog.name}
                           />
                         ) : (
-                          <div className="h-12 w-12 rounded-full bg-gray-300 flex items-center justify-center">
-                            <span className="text-gray-600 font-medium text-lg">
+                          <div className="h-20 w-20 rounded-full bg-gray-300 flex items-center justify-center">
+                            <span className="text-gray-600 font-medium text-3xl">
                               {dog.name.charAt(0).toUpperCase()}
                             </span>
                           </div>
                         )}
                       </div>
-                      <div className="ml-4 flex-1">
-                        <h3 className="text-lg font-medium text-gray-900">{dog.name}</h3>
-                        <p className="text-sm text-gray-500">
+                      <div className="ml-6 flex-1">
+                        <h3 className="text-2xl font-bold text-gray-900 mb-2">{dog.name}</h3>
+                        <p className="text-lg text-gray-600">
                           Fed {dog.todays_feedings} time{dog.todays_feedings !== 1 ? 's' : ''} today
                         </p>
                       </div>
                     </div>
-                    <div className="mt-4 flex space-x-3">
+                    <div className="flex space-x-4">
                       <button
                         onClick={() => openFeedingForm(dog)}
-                        className="flex-1 bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-md text-sm font-medium"
+                        className="flex-1 bg-green-600 hover:bg-green-700 text-white px-4 py-3 rounded-md text-base font-medium"
                       >
                         Log Feeding
                       </button>
                       <Link
                         href={`/dog/${dog.id}`}
-                        className="flex-1 bg-gray-600 hover:bg-gray-700 text-white px-3 py-2 rounded-md text-sm font-medium text-center"
+                        className="flex-1 bg-gray-600 hover:bg-gray-700 text-white px-4 py-3 rounded-md text-base font-medium text-center"
                       >
                         View History
                       </Link>
