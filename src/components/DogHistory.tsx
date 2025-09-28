@@ -3,15 +3,18 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { supabase, Dog, Feeding } from '@/lib/supabase'
-import { useRouter } from 'next/navigation'
 
 interface FeedingWithDate extends Feeding {
   date: string
 }
 
-export default function DogHistory({ dogId }: { dogId: string }) {
+interface DogHistoryProps {
+  dogId: string
+  onBack?: () => void
+}
+
+export default function DogHistory({ dogId, onBack }: DogHistoryProps) {
   const { user } = useAuth()
-  const router = useRouter()
   const [dog, setDog] = useState<Dog | null>(null)
   const [feedings, setFeedings] = useState<FeedingWithDate[]>([])
   const [loading, setLoading] = useState(true)
@@ -129,7 +132,7 @@ export default function DogHistory({ dogId }: { dogId: string }) {
             </div>
             <div className="flex items-center">
               <button
-                onClick={() => router.push('/')}
+                onClick={() => onBack?.()}
                 className="bg-gray-600 hover:bg-gray-700 text-white px-3 py-2 rounded-md text-sm font-medium"
               >
                 Back to Dashboard
@@ -171,7 +174,7 @@ export default function DogHistory({ dogId }: { dogId: string }) {
                 <div className="text-center py-8">
                   <p className="text-gray-500 text-lg">No feeding records yet.</p>
                   <button
-                    onClick={() => router.push('/')}
+                    onClick={() => onBack?.()}
                     className="mt-4 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md text-sm font-medium"
                   >
                     Go Back to Feed {dog.name}

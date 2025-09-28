@@ -3,11 +3,13 @@
 import { useState } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { supabase } from '@/lib/supabase'
-import { useRouter } from 'next/navigation'
 
-export default function AddDogForm() {
+interface AddDogFormProps {
+  onBack?: () => void
+}
+
+export default function AddDogForm({ onBack }: AddDogFormProps = {}) {
   const { user } = useAuth()
-  const router = useRouter()
   const [name, setName] = useState('')
   const [photoFile, setPhotoFile] = useState<File | null>(null)
   const [photoPreview, setPhotoPreview] = useState<string | null>(null)
@@ -91,7 +93,7 @@ export default function AddDogForm() {
 
       if (error) throw error
 
-      router.push('/')
+      onBack?.()
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'An error occurred')
     } finally {
@@ -109,7 +111,7 @@ export default function AddDogForm() {
             </div>
             <div className="flex items-center">
               <button
-                onClick={() => router.push('/')}
+                onClick={() => onBack?.()}
                 className="bg-gray-600 hover:bg-gray-700 text-white px-3 py-2 rounded-md text-sm font-medium"
               >
                 Back to Dashboard
@@ -196,7 +198,7 @@ export default function AddDogForm() {
               <div className="flex space-x-3">
                 <button
                   type="button"
-                  onClick={() => router.push('/')}
+                  onClick={() => onBack?.()}
                   className="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded-md text-sm font-medium"
                 >
                   Cancel

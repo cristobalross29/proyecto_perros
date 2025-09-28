@@ -3,13 +3,17 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { supabase, Dog } from '@/lib/supabase'
-import Link from 'next/link'
 
 interface DogWithFeedings extends Dog {
   todays_feedings: number
 }
 
-export default function Dashboard() {
+interface DashboardProps {
+  onViewHistory?: (dogId: string) => void
+  onAddDog?: () => void
+}
+
+export default function Dashboard({ onViewHistory, onAddDog }: DashboardProps = {}) {
   const { user, signOut } = useAuth()
   const [dogs, setDogs] = useState<DogWithFeedings[]>([])
   const [loading, setLoading] = useState(true)
@@ -162,23 +166,23 @@ export default function Dashboard() {
         <div className="px-4 py-6 sm:px-0">
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-2xl font-bold text-gray-900">My Dogs</h2>
-            <Link
-              href="/add-dog"
+            <button
+              onClick={onAddDog}
               className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md text-sm font-medium"
             >
               Add New Dog
-            </Link>
+            </button>
           </div>
 
           {dogs.length === 0 ? (
             <div className="text-center py-12">
               <p className="text-gray-500 text-lg">No dogs added yet.</p>
-              <Link
-                href="/add-dog"
+              <button
+                onClick={onAddDog}
                 className="mt-4 inline-block bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md text-sm font-medium"
               >
                 Add Your First Dog
-              </Link>
+              </button>
             </div>
           ) : (
             <div className="grid gap-6 grid-cols-1 md:grid-cols-2">
@@ -224,12 +228,12 @@ export default function Dashboard() {
                       >
                         Log Feeding
                       </button>
-                      <Link
-                        href={`/dog/${dog.id}`}
-                        className="flex-1 bg-gray-600 hover:bg-gray-700 text-white px-4 py-3 rounded-md text-base font-medium text-center"
+                      <button
+                        onClick={() => onViewHistory?.(dog.id)}
+                        className="flex-1 bg-gray-600 hover:bg-gray-700 text-white px-4 py-3 rounded-md text-base font-medium"
                       >
                         View History
-                      </Link>
+                      </button>
                     </div>
                   </div>
                 </div>
