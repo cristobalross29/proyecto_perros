@@ -50,7 +50,7 @@ export default function AddDogForm() {
     const fileExt = file.name.split('.').pop()
     const fileName = `${user?.id}/${Date.now()}.${fileExt}`
     
-    const { data, error } = await supabase.storage
+    const { error } = await supabase.storage
       .from('dog-photos')
       .upload(fileName, file)
 

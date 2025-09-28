@@ -1,11 +1,12 @@
 import DogHistory from '@/components/DogHistory'
 
 interface DogPageProps {
-  params: {
+  params: Promise<{
     id: string
-  }
+  }>
 }
 
-export default function DogPage({ params }: DogPageProps) {
-  return <DogHistory dogId={params.id} />
+export default async function DogPage({ params }: DogPageProps) {
+  const { id } = await params
+  return <DogHistory dogId={id} />
 }
