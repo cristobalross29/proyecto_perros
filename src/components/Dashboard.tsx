@@ -13,6 +13,10 @@ export default function Dashboard() {
   const { user, signOut } = useAuth()
   const [dogs, setDogs] = useState<DogWithFeedings[]>([])
   const [loading, setLoading] = useState(true)
+  const [showFeedingForm, setShowFeedingForm] = useState(false)
+  const [selectedDog, setSelectedDog] = useState<DogWithFeedings | null>(null)
+  const [feedingDateTime, setFeedingDateTime] = useState('')
+  const [submitting, setSubmitting] = useState(false)
 
   const fetchDogs = useCallback(async () => {
     try {
@@ -56,21 +60,49 @@ export default function Dashboard() {
     }
   }, [user, fetchDogs])
 
-  const handleFeedDog = async (dogId: string) => {
+  const openFeedingForm = (dog: DogWithFeedings) => {
+    setSelectedDog(dog)
+    // Set default to current date and time
+    const now = new Date()
+    const year = now.getFullYear()
+    const month = String(now.getMonth() + 1).padStart(2, '0')
+    const day = String(now.getDate()).padStart(2, '0')
+    const hours = String(now.getHours()).padStart(2, '0')
+    const minutes = String(now.getMinutes()).padStart(2, '0')
+    setFeedingDateTime(`${year}-${month}-${day}T${hours}:${minutes}`)
+    setShowFeedingForm(true)
+  }
+
+  const closeFeedingForm = () => {
+    setShowFeedingForm(false)
+    setSelectedDog(null)
+    setFeedingDateTime('')
+  }
+
+  const handleSubmitFeeding = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!selectedDog || !feedingDateTime) return
+
+    setSubmitting(true)
     try {
       const { error } = await supabase
         .from('feedings')
         .insert({
-          dog_id: dogId,
+          dog_id: selectedDog.id,
           user_id: user?.id,
+          timestamp: new Date(feedingDateTime).toISOString(),
         })
 
       if (error) throw error
 
       // Refresh the dogs list
       fetchDogs()
+      closeFeedingForm()
     } catch (error) {
-      console.error('Error feeding dog:', error)
+      console.error('Error adding feeding:', error)
+      alert('Failed to add feeding record. Please try again.')
+    } finally {
+      setSubmitting(false)
     }
   }
 
@@ -155,10 +187,10 @@ export default function Dashboard() {
                     </div>
                     <div className="mt-4 flex space-x-3">
                       <button
-                        onClick={() => handleFeedDog(dog.id)}
+                        onClick={() => openFeedingForm(dog)}
                         className="flex-1 bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-md text-sm font-medium"
                       >
-                        Fed Now
+                        Log Feeding
                       </button>
                       <Link
                         href={`/dog/${dog.id}`}
@@ -174,6 +206,50 @@ export default function Dashboard() {
           )}
         </div>
       </div>
+
+      {/* Feeding Form Modal */}
+      {showFeedingForm && selectedDog && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+            <div className="mt-3">
+              <h3 className="text-lg font-medium text-gray-900 mb-4">
+                Log Feeding for {selectedDog.name}
+              </h3>
+              <form onSubmit={handleSubmitFeeding} className="space-y-4">
+                <div>
+                  <label htmlFor="feedingDateTime" className="block text-sm font-medium text-gray-700">
+                    Date and Time
+                  </label>
+                  <input
+                    type="datetime-local"
+                    id="feedingDateTime"
+                    required
+                    value={feedingDateTime}
+                    onChange={(e) => setFeedingDateTime(e.target.value)}
+                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                  />
+                </div>
+                <div className="flex space-x-3 pt-4">
+                  <button
+                    type="button"
+                    onClick={closeFeedingForm}
+                    className="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded-md text-sm font-medium"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={submitting}
+                    className="flex-1 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm font-medium disabled:opacity-50"
+                  >
+                    {submitting ? 'Adding...' : 'Add Feeding'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
