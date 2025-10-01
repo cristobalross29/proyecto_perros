@@ -24,40 +24,43 @@ export default function Dashboard({ onViewHistory, onAddDog }: DashboardProps = 
 
   const fetchDogs = useCallback(async () => {
     try {
-      // Get dogs for the current user
       const { data: dogsData, error: dogsError } = await supabase
         .from('dogs')
         .select('*')
-        .eq('user_id', user?.id)
-
-      if (dogsError) throw dogsError
-
-      // Get today's feedings count for each dog
-      const today = new Date().toISOString().split('T')[0]
+        .eq('user_id', user?.id);
+  
+      if (dogsError) throw dogsError;
+  
+      // Local midnight boundaries (half-open interval)
+      const now = new Date();
+      const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0);
+      const startOfTomorrow = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 0, 0, 0);
+  
       const dogsWithFeedings = await Promise.all(
         dogsData.map(async (dog) => {
-          const { count } = await supabase
+          const { count, error: countError } = await supabase
             .from('feedings')
             .select('*', { count: 'exact', head: true })
             .eq('dog_id', dog.id)
-            .gte('timestamp', `${today}T00:00:00.000Z`)
-            .lt('timestamp', `${today}T23:59:59.999Z`)
-
-          return {
-            ...dog,
-            todays_feedings: count || 0,
-          }
+            .eq('user_id', user?.id) // <-- IMPORTANT: match history filter
+            .gte('timestamp', startOfDay.toISOString())
+            .lt('timestamp', startOfTomorrow.toISOString());
+  
+          if (countError) throw countError;
+  
+          return { ...dog, todays_feedings: count ?? 0 };
         })
-      )
-
-      setDogs(dogsWithFeedings)
+      );
+  
+      setDogs(dogsWithFeedings);
     } catch (error) {
-      console.error('Error fetching dogs:', error)
+      console.error('Error fetching dogs:', error);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }, [user?.id])
-
+  }, [user?.id]);
+  
+  
   useEffect(() => {
     if (user) {
       fetchDogs()
