@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { supabase, Dog } from '@/lib/supabase'
+import { CHILE_TZ, datetimeLocalToUtcIso, getDayBoundariesInUtc } from '@/lib/time'
 
 interface DogWithFeedings extends Dog {
   todays_feedings: number
@@ -31,10 +32,8 @@ export default function Dashboard({ onViewHistory, onAddDog }: DashboardProps = 
   
       if (dogsError) throw dogsError;
   
-      // Local midnight boundaries (half-open interval)
-      const now = new Date();
-      const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0);
-      const startOfTomorrow = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 0, 0, 0);
+      // Get proper day boundaries for Santiago timezone
+      const { startOfDay, endOfDay } = getDayBoundariesInUtc(new Date(), CHILE_TZ)
   
       const dogsWithFeedings = await Promise.all(
         dogsData.map(async (dog) => {
@@ -43,8 +42,8 @@ export default function Dashboard({ onViewHistory, onAddDog }: DashboardProps = 
             .select('*', { count: 'exact', head: true })
             .eq('dog_id', dog.id)
             .eq('user_id', user?.id) // <-- IMPORTANT: match history filter
-            .gte('timestamp', startOfDay.toISOString())
-            .lt('timestamp', startOfTomorrow.toISOString());
+            .gte('timestamp', startOfDay)
+            .lte('timestamp', endOfDay);
   
           if (countError) throw countError;
   
@@ -69,13 +68,16 @@ export default function Dashboard({ onViewHistory, onAddDog }: DashboardProps = 
 
   const openFeedingForm = (dog: DogWithFeedings) => {
     setSelectedDog(dog)
-    // Set default to current date and time
+    // Set default to current date and time in Santiago timezone
     const now = new Date()
-    const year = now.getFullYear()
-    const month = String(now.getMonth() + 1).padStart(2, '0')
-    const day = String(now.getDate()).padStart(2, '0')
-    const hours = String(now.getHours()).padStart(2, '0')
-    const minutes = String(now.getMinutes()).padStart(2, '0')
+    const tz = CHILE_TZ
+    const parts = new Intl.DateTimeFormat('en-CA', { timeZone: tz, year: 'numeric', month: '2-digit', day: '2-digit' }).formatToParts(now)
+    const timeParts = new Intl.DateTimeFormat('en-GB', { timeZone: tz, hour: '2-digit', minute: '2-digit', hour12: false }).formatToParts(now)
+    const year = parts.find(p => p.type === 'year')?.value ?? '0000'
+    const month = parts.find(p => p.type === 'month')?.value ?? '01'
+    const day = parts.find(p => p.type === 'day')?.value ?? '01'
+    const hours = timeParts.find(p => p.type === 'hour')?.value ?? '00'
+    const minutes = timeParts.find(p => p.type === 'minute')?.value ?? '00'
     setFeedingDateTime(`${year}-${month}-${day}T${hours}:${minutes}`)
     setShowFeedingForm(true)
   }
@@ -97,7 +99,8 @@ export default function Dashboard({ onViewHistory, onAddDog }: DashboardProps = 
         .insert({
           dog_id: selectedDog.id,
           user_id: user?.id,
-          timestamp: new Date(feedingDateTime).toISOString(),
+          // Interpret the local datetime input as Santiago time, then store as UTC
+          timestamp: datetimeLocalToUtcIso(feedingDateTime, CHILE_TZ),
         })
 
       if (error) throw error

@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { supabase, Dog, Feeding } from '@/lib/supabase'
+import { CHILE_TZ, formatDateInTz, formatTimeInTz, getDateKeyInTz } from '@/lib/time'
 
 interface FeedingWithDate extends Feeding {
   date: string
@@ -42,10 +43,10 @@ export default function DogHistory({ dogId, onBack }: DogHistoryProps) {
 
       if (feedingsError) throw feedingsError
 
-      // Group feedings by date
+      // Group feedings by date using Europe/Madrid timezone
       const feedingsWithDate = feedingsData.map((feeding) => ({
         ...feeding,
-        date: new Date(feeding.timestamp).toLocaleDateString(),
+        date: getDateKeyInTz(feeding.timestamp, CHILE_TZ),
       }))
 
       setFeedings(feedingsWithDate)
@@ -74,10 +75,7 @@ export default function DogHistory({ dogId, onBack }: DogHistoryProps) {
   }
 
   const formatTime = (timestamp: string) => {
-    return new Date(timestamp).toLocaleTimeString([], {
-      hour: '2-digit',
-      minute: '2-digit',
-    })
+    return formatTimeInTz(timestamp, 'en-GB', CHILE_TZ)
   }
 
   const handleDeleteFeeding = async (feedingId: string) => {
@@ -163,7 +161,7 @@ export default function DogHistory({ dogId, onBack }: DogHistoryProps) {
                 <div className="ml-4">
                   <h2 className="text-2xl font-bold text-gray-900">{dog.name}</h2>
                   <p className="text-gray-500">
-                    Added on {new Date(dog.created_at).toLocaleDateString()}
+                    Added on {formatDateInTz(dog.created_at, 'en-GB', CHILE_TZ)}
                   </p>
                 </div>
               </div>
